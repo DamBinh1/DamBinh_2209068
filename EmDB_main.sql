@@ -30,3 +30,40 @@ SET Salary = Salary * 1.1;
 --cau3
 ALTER TABLE Employee
 ADD CONSTRAINT CK_Salary CHECK (Salary > 0);
+--cau4
+create trigger TG_CheckBirthday
+on Employee
+after update, insert
+as
+begin
+    declare @dayOfBirthDay date;
+	select @dayOfBirthDay  = inserted.Birthday from inserted;
+
+	if(Day(@dayOfBirthDay) <= 23 ) 
+	begin
+	    print 'Day of birthday must be greater than 23!';
+		rollback transaction;
+	end
+end
+go
+--cau5
+ create nonclustered index IX_DepartmentName
+ on Department(DepartName)
+ go
+ --cau8
+ create procedure sp_delDept(@empCode char(6))
+ as 
+ begin
+   if (select count (*) from Employee where Employee.Empcode = @empCode) > 0
+   begin
+      delete from Employee
+	  where EmpCode = @empCode
+   end
+   else
+   begin
+      print 'Dont find employee!';
+	  rollback transaction;
+   end
+ end
+ exec sp_delDept @empCode = 'E001'
+ go
